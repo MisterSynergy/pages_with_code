@@ -1,0 +1,28 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: msynbot.pages-with-code
+  labels:
+    name: msynbot.pages-with-code
+    # The toolforge=tool label will cause $HOME and other paths to be mounted from Toolforge
+    toolforge: tool
+spec:
+  schedule: "42 4 * * 6"
+  successfulJobsHistoryLimit: 0
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            toolforge: tool
+        spec:
+          containers:
+          - name: pages-with-code
+            image: docker-registry.tools.wmflabs.org/toolforge-python39-sssd-base:latest
+            command: [ "/data/project/msynbot/pywikibot_tasks/pages_with_code/venv/bin/python3" ]
+            args: [ "/data/project/shared/pywikibot/stable/pwb.py", "/data/project/msynbot/pywikibot_tasks/pages_with_code/main.py" ]
+            workingDir: /data/project/msynbot/pywikibot_tasks/pages_with_code
+            env:
+            - name: HOME
+              value: /data/project/msynbot
+          restartPolicy: OnFailure
