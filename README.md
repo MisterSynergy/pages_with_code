@@ -1,5 +1,5 @@
 # Pages with code
-This is a Wikidata bot that periodically updates a list of community-maintained wikipages with sourcecode.
+This is a Wikidata bot that periodically updates a list of community-maintained wikipages with sourcecode (excluding pages in Template and User namespace).
 
 Currently, the report can be read at [User:MisterSynergy/pages_with_code](https://www.wikidata.org/wiki/User:MisterSynergy/pages_with_code).
 
