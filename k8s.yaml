@@ -19,10 +19,12 @@ spec:
           containers:
           - name: pages-with-code
             image: docker-registry.tools.wmflabs.org/toolforge-python39-sssd-base:latest
-            command: [ "/data/project/msynbot/pywikibot_tasks/pages_with_code/venv/bin/python3" ]
-            args: [ "/data/project/shared/pywikibot/stable/pwb.py", "/data/project/msynbot/pywikibot_tasks/pages_with_code/main.py" ]
-            workingDir: /data/project/msynbot/pywikibot_tasks/pages_with_code
             env:
+            - name: PYTHONPATH
+              value: /data/project/shared/pywikibot/stable
             - name: HOME
               value: /data/project/msynbot
+            workingDir: /data/project/msynbot/pywikibot_tasks/pages_with_code
+            command: [ venv/bin/python3 ]
+            args: [ main.py ]
           restartPolicy: OnFailure
