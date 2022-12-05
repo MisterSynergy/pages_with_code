@@ -19,6 +19,13 @@ spec:
           containers:
           - name: pages-with-code
             image: docker-registry.tools.wmflabs.org/toolforge-python39-sssd-base:latest
+            resources:
+              requests:
+                memory: "100Mi"
+                cpu: "100m"
+              limits:
+                memory: "100Mi"
+                cpu: "100m"
             env:
             - name: PYTHONPATH
               value: /data/project/shared/pywikibot/stable
@@ -27,4 +34,4 @@ spec:
             workingDir: /data/project/msynbot/pywikibot_tasks/pages_with_code
             command: [ venv/bin/python3 ]
             args: [ main.py ]
-          restartPolicy: OnFailure
+          restartPolicy: Never
