@@ -18,7 +18,7 @@ spec:
         spec:
           containers:
           - name: pages-with-code
-            image: docker-registry.tools.wmflabs.org/toolforge-python39-sssd-base:latest
+            image: docker-registry.tools.wmflabs.org/toolforge-python311-sssd-base:latest
             resources:
               requests:
                 memory: "100Mi"
