@@ -1,11 +1,12 @@
 from json import JSONDecodeError
 from os.path import expanduser
 from time import strftime
+from typing import Any
 
+import mariadb
 import pandas as pd
 import pywikibot as pwb
 import requests
-from mysql.connector import MySQLConnection, FieldType
 
 
 WIKIDATA_API_ENDPOINT = 'https://www.wikidata.org/w/api.php'
@@ -14,14 +15,14 @@ USER_AGENT = f'{requests.utils.default_headers()["User-Agent"]} (Wikidata bot' \
 DB_PARAMS = {
     'host' : 'wikidatawiki.analytics.db.svc.wikimedia.cloud',
     'database' : 'wikidatawiki_p',
-    'option_files' : f'{expanduser("~")}/replica.my.cnf'
+    'default_file' : f'{expanduser("~")}/replica.my.cnf'
 }
 
 
 class Replica:
     def __init__(self):
-        self.replica = MySQLConnection(**DB_PARAMS)
-        self.cursor = self.replica.cursor()
+        self.replica = mariadb.connect(**DB_PARAMS)
+        self.cursor = self.replica.cursor(dictionary=True)
 
     def __enter__(self):
         return self.cursor
@@ -31,32 +32,21 @@ class Replica:
         self.replica.close()
 
 
-def query_mediawiki(query:str) -> tuple[list[tuple[int, str, str, int, int, str]], \
-        tuple[str, str, str, str, str, str], list[str]]:
+def query_mediawiki(query:str) -> tuple[dict[str, Any]]:
     with Replica() as db_cursor:
         db_cursor.execute(query)
         result = db_cursor.fetchall()
 
-        column_names = db_cursor.column_names
-        columns_to_convert = []
-
-        for desc in db_cursor.description:
-             # some are clearly missing here in this list
-            if FieldType.get_info(desc[1]) in [ 'VAR_STRING', 'STRING' ]:
-                columns_to_convert.append(desc[0])
-
-    return result, column_names, columns_to_convert
+    return result
 
 
-def query_to_dataframe(query:str, convert_strings:bool=True) -> pd.DataFrame:
-    result, column_names, columns_to_convert = query_mediawiki(query)
+def query_to_dataframe(query:str) -> pd.DataFrame:
+    result = query_mediawiki(query)
+
     df = pd.DataFrame(
-        data=result,
-        columns=column_names
+        data=result
     )
-    if convert_strings is True:
-        for column in columns_to_convert:
-            df[column] = df[column].str.decode('utf8')
+
     return df
 
 
@@ -91,11 +81,11 @@ def retrieve_namespace_resolver() -> dict[int, str]:
 def query_pages_with_code(namespaces:dict[int, str]) -> pd.DataFrame:
     query = """SELECT
   page_namespace,
-  page_title,
-  page_content_model,
+  CONVERT(page_title USING utf8) AS page_title,
+  CONVERT(page_content_model USING utf8) AS page_content_model,
   page_len,
-  rev_timestamp,
-  actor_name
+  CONVERT(rev_timestamp USING utf8) AS rev_timestamp,
+  CONVERT(actor_name USING utf8) AS actor_name
 FROM
   page
     JOIN revision_userindex ON page_latest=rev_id
